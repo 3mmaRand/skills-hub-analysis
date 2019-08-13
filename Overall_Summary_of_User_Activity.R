@@ -59,26 +59,82 @@ undoc_user <- overall_summary_user %>%
 overall_summary_doc_user <- overall_summary_user %>% 
   filter(!username %in% undoc_user$username)
 
+###########################################
+# content use by intended award all user
+###########################################
 
-# intended award all user
 
-overall_summary_doc_user %>% 
+content_use_all <- overall_summary_doc_user %>% 
   group_by(intended_award) %>% 
-  summarize(number = length(content),
-            mean_content = mean(content),
-            sd_content = sd(content),
-            median_content = median(content),
-            max_content = max(content),
-            min_content = min(content))
+  summarize(total_n = length(content),
+            total_mean_content = mean(content),
+            total_sd_content = sd(content),
+            total_median_content = median(content),
+            total_max_content = max(content),
+            total_min_content = min(content))
             
-# intended award active-user use
+# content use by intended award active-user use
 
-overall_summary_doc_user %>% 
+content_use_active <- overall_summary_doc_user %>% 
   filter(content > 0) %>% 
   group_by(intended_award) %>% 
-  summarize(number = length(content),
-            mean_content = mean(content),
-            sd_content = sd(content),
-            median_content = median(content),
-            max_content = max(content),
-            min_content = min(content))
+  summarize(active_n = length(content),
+            active_mean_content = mean(content),
+            active_sd_content = sd(content),
+            active_median_content = median(content),
+            active_max_content = max(content),
+            active_min_content = min(content))
+
+# content non use by intended award
+content_use_nonuser <- overall_summary_doc_user %>% 
+  filter(content == 0) %>% 
+  group_by(intended_award) %>% 
+  summarize(non_user_n = length(content))
+
+content_use_all <- content_use_nonuser %>% 
+  select(non_user_n, intended_award) %>% 
+  merge(content_use_all, by = "intended_award")
+
+content_use_all$percentuse <- 100 * (content_use_all$total_n - content_use_all$non_user_n) / content_use_all$total_n
+
+content_use_all %>% select(intended_award,percentuse)
+
+#################################
+# content use by tier 4 status
+#################################
+
+content_use_all <- overall_summary_doc_user %>% 
+  group_by(tier4) %>% 
+  summarize(total_n = length(content),
+            total_mean_content = mean(content),
+            total_sd_content = sd(content),
+            total_median_content = median(content),
+            total_max_content = max(content),
+            total_min_content = min(content))
+
+# content use by intended award active-user use
+
+content_use_active <- overall_summary_doc_user %>% 
+  filter(content > 0) %>% 
+  group_by(tier4) %>% 
+  summarize(active_n = length(content),
+            active_mean_content = mean(content),
+            active_sd_content = sd(content),
+            active_median_content = median(content),
+            active_max_content = max(content),
+            active_min_content = min(content))
+
+# content non use by intended award
+content_use_nonuser <- overall_summary_doc_user %>% 
+  filter(content == 0) %>% 
+  group_by(tier4) %>% 
+  summarize(non_user_n = length(content))
+
+content_use_all <- content_use_nonuser %>% 
+  select(non_user_n, tier4) %>% 
+  merge(content_use_all, by = "tier4")
+
+content_use_all$percentuse <- 100 * (content_use_all$total_n - content_use_all$non_user_n) / content_use_all$total_n
+
+content_use_all %>% select(tier4, percentuse)
+
