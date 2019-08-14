@@ -113,7 +113,7 @@ Includes those registered who made no use
 ###########################################
 
 content_use_all <- overall_summary_doc_user %>% 
-  group_by(intended_award) %>% 
+  group_by(intended_award, .drop = FALSE) %>% 
   summarize(n = length(content),
             mean = mean(content),
             sd = sd(content),
@@ -141,7 +141,7 @@ Only those that had at least one hit
 ```{r}
 content_use_active <- overall_summary_doc_user %>% 
   filter(content > 0) %>% 
-  group_by(intended_award) %>% 
+  group_by(intended_award, .drop = FALSE) %>% 
   summarize(n = length(content),
             mean = mean(content),
             sd = sd(content),
@@ -265,7 +265,7 @@ content_use_nonuser %>% flextable() %>%
 ```
 
 
-#### Percent use by Intended award
+#### Percent use by Tier 4
 ```{r}
 content_use_all <- content_use_nonuser %>% 
   select(n, tier4) %>% 
@@ -284,3 +284,39 @@ content_use_all %>%
                 digits = 1) %>% 
   add_header_lines("Percentage use per Intended award") 
 ```
+
+
+### Content hits by Intended award and Tier 4 status
+
+#### Summary for active site-registered users
+Only those that had at least one hit
+```{r}
+content_use_activeN <- overall_summary_doc_user %>%
+  filter(content > 0) %>%
+  filter(tier4 == "N") %>% 
+  group_by(intended_award, .drop = FALSE) %>%
+  summarize(N = length(content))
+
+content_use_activeY <- overall_summary_doc_user %>%
+  filter(content > 0) %>%
+  filter(tier4 == "Y") %>% 
+  group_by(intended_award, .drop = FALSE) %>%
+  summarize(N = length(content))
+
+content_use_active <- content_use_activeN %>% 
+  merge(content_use_activeY, by = "intended_award", all.x = TRUE)
+
+
+
+```
+
+
+```{r tier4-award-active}
+content_use_active %>% flextable() %>% 
+  set_header_labels(N.x = "N", N.y = "Y" ) %>% 
+  add_header_row(values = c("","Tier 4 status"), colwidths = c(1, 2)) %>% 
+  align(align = "right", part = "header") %>% 
+  fontsize(size = 10, part = "all") %>% 
+  add_header_lines("Number of users with at least one hit by award and tier 4 status") 
+```
+

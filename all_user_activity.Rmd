@@ -1,0 +1,175 @@
+
+---
+title: "All User Activity inside Content Areas: Skillshub site"
+author: "Emma Rand"
+output:
+  html_document: bookdown::html_document2
+  pdf_document: bookdown::pdf_document2
+  word_document: default
+figsintext: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      warning = FALSE,
+                      message = FALSE,
+                      fig.show = "asis")
+```
+
+```{r pkg}
+
+library(readxl)
+library(janitor)
+library(tidyverse)
+library(flextable)
+```
+
+
+# User Activity in contect areas
+
+Data derived from the "All User Activity inside Content Areas" report from BB for the Skillshub site.
+The data were downloaded on 05-08-19 and cover period 01-09-18 to 05-08-19. It comprises the number of hits.
+
+
+Student record data were downloaded from SES on 05-08-19. This data file includes all students registered in the Biology Department but excludes students recently graduated.
+
+```{r import}
+# read in list of all students
+# downloaded from biology department on 08-08-19
+
+students <- read_excel("../data/students.xlsx") %>% 
+  clean_names()
+
+# read in list of VLE use
+# download from VLE 05-08-19 and covered period 01-09-18 to 05-08-19
+file <-  "../data/All User Activity inside Content Areas_MG.xlsx"
+content_area_summary <- read_excel(file, 
+                              sheet = "Content" ) %>% 
+  clean_names()
+
+# read in list of excludes
+exclude <- read.table("../data/exclude_users.txt",
+                      header = TRUE,
+                      stringsAsFactors = FALSE)
+```
+
+The number of Student records: `r nrow(students)`. 
+The number of Registered site users: `r nrow(content_area_summary)`.
+
+Some users involved in the project were excluded. These were: `r exclude$username`
+```{r}
+# exclude the usernames in exclude from all content_area_summary
+content_area_summary <- content_area_summary %>% subset(!(username %in% exclude$username))
+
+# exclude the usernames in exclude from all students
+students <- students %>% subset(!(username %in% exclude$username))
+```
+This left `r nrow(students)` student records and `r nrow(content_area_summary)` registered site users
+
+## Summary for with-record Student users
+
+```{r}
+# merge dataframes keeping all rows in content_area_summary
+# some student data will be missing for vle users since they have been removed
+# but should be possible to get their information - has been requested from the
+# office
+# students in the list of documented students that were not in the list of registered user
+# will not be include
+
+content_area_summary_user <-  content_area_summary %>% 
+  merge(students, by = "username", 
+        all.x = TRUE) 
+```
+
+The student data was combined with the Overall Summary data. 
+
+```{r}
+# Get list of usernames for people in VLE but not in student list 
+# these are students who graduated or staff
+undoc_user <- content_area_summary_user %>% 
+  filter(is.na(student_code)) %>% 
+  select(name, username)
+write.table(undoc_user, 
+            file = "../data/recordless2.txt", 
+            row.names = FALSE)
+```
+"Recordless" users, i.e., those without student records were dropped for this analysis. This included students who graduated or staff. These `r nrow(undoc_user) ` recordless users are [here](../data/recordless.txt)
+
+```{r}
+# work with the documented users
+# these are students in years 2, 3 and 4, (1, 2, 3 as was in 2018-19 academic year)
+content_area_summary_doc_user <- content_area_summary_user %>% 
+  filter(!username %in% undoc_user$username)
+```
+This leaves `r nrow(content_area_summary_doc_user) ` site-registered users with records.
+
+
+### Content hits by Intended award
+
+```{r}
+###########################################
+# content use by intended award all user
+###########################################
+
+content_use_all <- content_area_summary_doc_user %>% 
+  group_by(intended_award) %>% 
+  summarize(Total = sum(total),
+            AcadIinteg = sum(academic_integrity_and_ethics),
+            Ackn = sum(acknowledgments),
+            Bioinf = sum(bioinformatics),
+            Links = sum(biology_webpages_and_other_useful_links),
+            Careers = sum(careers),
+            ChemHub = sum(chemistry_hub),
+            CommSkills = sum(communication_skills),
+            DataSkils = sum(data_skills_and_numeracy),
+            Feedback = sum(give_us_your_feedback),
+            GroupWork = sum(group_work),
+            IndepLearn = sum(independent_learning),
+            Library = sum(library_resources),
+            PracSkills = sum(practical_skills_and_safety),
+            Welcome = sum(welcome_page))
+```            
+
+
+```{r award-all}
+keys <- names(content_use_all)[-1]
+content_use_all %>% flextable() %>% 
+  fontsize(size = 10, part = "all") %>% 
+  colformat_num(col_keys = keys, 
+                digits = 0) %>%
+  add_header_lines("Total Content Area hits by award") 
+```
+
+
+
+
+### Content hits by Tier 4 status
+
+```{r}
+content_use_all <- content_area_summary_doc_user %>%
+  group_by(tier4) %>%
+  summarize(Total = sum(total),
+            AcadIinteg = sum(academic_integrity_and_ethics),
+            Ackn = sum(acknowledgments),
+            Bioinf = sum(bioinformatics),
+            Links = sum(biology_webpages_and_other_useful_links),
+            Careers = sum(careers),
+            ChemHub = sum(chemistry_hub),
+            CommSkills = sum(communication_skills),
+            DataSkils = sum(data_skills_and_numeracy),
+            Feedback = sum(give_us_your_feedback),
+            GroupWork = sum(group_work),
+            IndepLearn = sum(independent_learning),
+            Library = sum(library_resources),
+            PracSkills = sum(practical_skills_and_safety),
+            Welcome = sum(welcome_page))
+```
+
+```{r tier4-all}
+content_use_all %>% flextable() %>% 
+  colformat_num(col_keys = keys, 
+                digits = 0) %>% 
+  fontsize(size = 10, part = "all") %>% 
+  add_header_lines("Total content hits by tier 4 status") 
+```
+
