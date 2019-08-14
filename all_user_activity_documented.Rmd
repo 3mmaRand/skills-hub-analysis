@@ -1,6 +1,6 @@
 
 ---
-title: "All User Activity inside Content Areas: Skillshub site"
+title: "All 'Documented' User Activity inside Content Areas: Skillshub site"
 author: "Emma Rand"
 output:
   html_document: bookdown::html_document2
@@ -25,7 +25,7 @@ library(flextable)
 ```
 
 
-# User Activity in contect areas
+# User Activity in content areas
 
 Data derived from the "All User Activity inside Content Areas" report from BB for the Skillshub site.
 The data were downloaded on 05-08-19 and cover period 01-09-18 to 05-08-19. It comprises the number of hits.
