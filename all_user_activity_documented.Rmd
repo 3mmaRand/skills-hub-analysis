@@ -3,8 +3,8 @@
 title: "All 'Documented' User Activity inside Content Areas: Skillshub site"
 author: "Emma Rand"
 output:
-  html_document: bookdown::html_document2
   pdf_document: bookdown::pdf_document2
+  html_document: bookdown::html_document2
   word_document: default
 figsintext: yes
 ---
